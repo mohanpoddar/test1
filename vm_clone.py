@@ -18,8 +18,8 @@ def get_obj(content, vimtype, name):
             break
     return obj
 
-# Function to clone the VM template
-def clone_vm(si, template_name, vm_name, datacenter_name, vm_folder_name, datastore_name, cluster_name):
+# Function to clone the VM template to a new template
+def clone_vm_template(si, template_name, new_template_name, datacenter_name, vm_folder_name, datastore_name, cluster_name):
     content = si.RetrieveContent()
     
     # Get datacenter, folder, datastore, and cluster
@@ -40,26 +40,26 @@ def clone_vm(si, template_name, vm_name, datacenter_name, vm_folder_name, datast
     clone_spec = vim.vm.CloneSpec()
     clone_spec.location = reloc_spec
     clone_spec.powerOn = False
-    clone_spec.template = False
+    clone_spec.template = True  # Important: This marks the new VM as a template
 
-    # Clone the VM
-    task = template.Clone(folder=vm_folder, name=vm_name, spec=clone_spec)
+    # Clone the VM template
+    task = template.Clone(folder=vm_folder, name=new_template_name, spec=clone_spec)
     
     # Wait for the task to complete
     while task.info.state == vim.TaskInfo.State.running:
         pass
 
     if task.info.state == vim.TaskInfo.State.success:
-        print(f"VM '{vm_name}' cloned successfully from template '{template_name}'")
+        print(f"Template '{new_template_name}' cloned successfully from template '{template_name}'")
     else:
-        print(f"Failed to clone VM: {task.info.error}")
+        print(f"Failed to clone template: {task.info.error}")
 
 def main():
     vcenter = 'your_vcenter_server'
     user = 'your_username'
     password = 'your_password'
     template_name = 'your_template_name'
-    vm_name = 'new_vm_name'
+    new_template_name = 'new_template_name'
     datacenter_name = 'your_datacenter_name'
     vm_folder_name = 'your_vm_folder_name'
     datastore_name = 'your_datastore_name'
@@ -67,7 +67,7 @@ def main():
 
     si = connect_to_vcenter(vcenter, user, password)
     try:
-        clone_vm(si, template_name, vm_name, datacenter_name, vm_folder_name, datastore_name, cluster_name)
+        clone_vm_template(si, template_name, new_template_name, datacenter_name, vm_folder_name, datastore_name, cluster_name)
     finally:
         Disconnect(si)
 
