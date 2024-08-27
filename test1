@@ -1,0 +1,16 @@
+# Retrieve the network or DVPortGroup
+network = get_obj(content, [vim.Network, vim.dvs.DistributedVirtualPortgroup], network_name)
+if network is None:
+    raise Exception(f"Network '{network_name}' not found.")
+
+# If the network is a DVPortGroup, set up the DVPort connection
+if isinstance(network, vim.dvs.DistributedVirtualPortgroup):
+    dvs_port_connection = vim.dvs.PortConnection()
+    dvs_port_connection.portgroupKey = network.key
+    dvs_port_connection.switchUuid = network.config.distributedVirtualSwitch.uuid
+
+    adaptermap.adapter.network = None  # Set to None because we are using dvsPort
+    adaptermap.adapter.dvsPort = dvs_port_connection
+else:
+    # For standard vSwitch networks
+    adaptermap.adapter.network = network
